@@ -32,7 +32,7 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({ assignment }) =>
         href={`/client/homework/${assignment.id}`}
         className="flex items-center justify-between w-full py-2 px-4 rounded-lg bg-wg-secondary text-wg-charcoal text-sm font-medium group-hover:bg-wg-primary group-hover:text-white transition-all"
       >
-        <span>{assignment.status === 'completed' ? 'View Response' : 'Start Exercise'}</span>
+        <span>{assignment.status === 'submitted' || assignment.status === 'reviewed' ? 'View Response' : 'Start Exercise'}</span>
         <ChevronRight size={16} />
       </Link>
     </div>

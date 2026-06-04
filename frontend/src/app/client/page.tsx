@@ -35,7 +35,7 @@ export default function ClientDashboard() {
   }
 
   const pendingCount = assignments.filter(a => a.status === 'pending').length;
-  const completedCount = assignments.filter(a => a.status === 'completed').length;
+  const completedCount = assignments.filter(a => a.status === 'submitted' || a.status === 'reviewed').length;
   const totalCount = assignments.length;
 
   return (
@@ -94,10 +94,10 @@ export default function ClientDashboard() {
         <section className="space-y-6">
           <h2 className="text-sm font-bold uppercase tracking-wider text-wg-charcoal/40">Active Homework</h2>
           
-          {assignments.filter(a => a.status !== 'completed').length > 0 ? (
+          {assignments.filter(a => a.status === 'pending' || a.status === 'overdue').length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {assignments
-                .filter(a => a.status !== 'completed')
+                .filter(a => a.status === 'pending' || a.status === 'overdue')
                 .map(assignment => (
                   <AssignmentCard key={assignment.id} assignment={assignment} />
                 ))
