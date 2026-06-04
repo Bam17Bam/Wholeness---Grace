@@ -24,7 +24,7 @@ export default function HistoryPage() {
 
   useEffect(() => {
     if (user) {
-      setAssignments(MOCK_ASSIGNMENTS.filter(a => a.status === 'completed'));
+      setAssignments(MOCK_ASSIGNMENTS.filter(a => a.status === 'submitted' || a.status === 'reviewed'));
     }
   }, [user]);
 
