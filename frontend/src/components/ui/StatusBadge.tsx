@@ -8,7 +8,8 @@ interface StatusBadgeProps {
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const styles = {
     pending: 'bg-wg-accent/10 text-wg-accent border-wg-accent/20',
-    completed: 'bg-wg-success/10 text-wg-success border-wg-success/20',
+    submitted: 'bg-wg-primary/10 text-wg-primary border-wg-primary/20',
+    reviewed: 'bg-wg-success/10 text-wg-success border-wg-success/20',
     overdue: 'bg-wg-error/10 text-wg-error border-wg-error/20',
   };
 

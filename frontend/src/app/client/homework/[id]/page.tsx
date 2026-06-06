@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronLeft, Send, Save, CheckCircle } from "lucide-react";
-import { MOCK_ASSIGNMENTS } from "@/lib/mock-data";
+import { api } from "@/lib/api-client";
 import { Assignment } from "@/types";
 
 export default function HomeworkDetailPage() {
@@ -15,6 +15,7 @@ export default function HomeworkDetailPage() {
   const [response, setResponse] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -24,23 +25,39 @@ export default function HomeworkDetailPage() {
 
   useEffect(() => {
     if (user && params.id) {
-      const found = MOCK_ASSIGNMENTS.find(a => a.id === params.id);
-      if (found) {
-        setAssignment(found);
-      }
+      fetchAssignment();
     }
   }, [user, params.id]);
+
+  const fetchAssignment = async () => {
+    setIsDataLoading(true);
+    try {
+      const response = await api.get(`/assignments/${params.id}`);
+      setAssignment(response.data);
+    } catch (error) {
+      console.error("Failed to fetch assignment:", error);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    try {
+      await api.post("/submissions", {
+        assignmentId: assignment?.id,
+        content: response,
+      });
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error("Failed to submit homework:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (isLoading || !assignment) {
+  if (isLoading || isDataLoading || !assignment) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-wg-background">
         <div className="animate-pulse text-wg-primary font-serif italic">Loading...</div>
