@@ -8,8 +8,8 @@ import ClientList from "@/components/clinician/ClientList";
 import AssignmentForm from "@/components/clinician/AssignmentForm";
 import ClientDetail from "@/components/clinician/ClientDetail";
 import SubmissionReview from "@/components/clinician/SubmissionReview";
-import { MOCK_CLIENTS, MOCK_AUDIT_LOGS } from "@/lib/mock-data";
-import { ClientProfile, Assignment, Submission } from "@/types";
+import { api } from "@/lib/api-client";
+import { ClientProfile, Assignment, Submission, AuditLog } from "@/types";
 
 type Tab = 'clients' | 'audit';
 
@@ -20,6 +20,10 @@ export default function ClinicianDashboard() {
   const [selectedClient, setSelectedClient] = useState<ClientProfile | null>(null);
   const [showAssignForm, setShowAssignForm] = useState(false);
   const [viewingSubmission, setViewingSubmission] = useState<{assignment: Assignment, submission: Submission} | null>(null);
+  
+  const [clients, setClients] = useState<ClientProfile[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -29,6 +33,29 @@ export default function ClinicianDashboard() {
       router.push("/client");
     }
   }, [user, isLoading, router]);
+
+  useEffect(() => {
+    if (user && user.role === 'clinician') {
+      fetchData();
+    }
+  }, [user, activeTab]);
+
+  const fetchData = async () => {
+    setIsDataLoading(true);
+    try {
+      if (activeTab === 'clients') {
+        const data = await api.get("/clients");
+        setClients(data);
+      } else if (activeTab === 'audit') {
+        const data = await api.get("/audit-logs");
+        setAuditLogs(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch clinician data:", error);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
 
   if (isLoading || !user) {
     return (
@@ -62,7 +89,7 @@ export default function ClinicianDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-wg-charcoal/5 text-sm">
-              {MOCK_AUDIT_LOGS.map(log => (
+              {auditLogs.map(log => (
                 <tr key={log.id} className="hover:bg-wg-secondary/30 transition-colors">
                   <td className="px-6 py-4 text-wg-charcoal/50 whitespace-nowrap">
                     {new Date(log.timestamp).toLocaleString()}
@@ -153,7 +180,7 @@ export default function ClinicianDashboard() {
           </div>
 
           <ClientList 
-            clients={MOCK_CLIENTS} 
+            clients={clients} 
             onSelectClient={(client) => setSelectedClient(client)}
           />
         </div>
@@ -175,7 +202,7 @@ export default function ClinicianDashboard() {
               Recent Activity
             </h3>
             <div className="space-y-4">
-              {MOCK_AUDIT_LOGS.slice(0, 3).map(log => (
+              {auditLogs.slice(0, 3).map(log => (
                 <div key={log.id} className="text-xs border-l-2 border-wg-primary/30 pl-3 py-1">
                   <p className="text-wg-charcoal font-medium">{log.details}</p>
                   <p className="text-wg-charcoal/40 mt-1">{new Date(log.timestamp).toLocaleTimeString()}</p>
