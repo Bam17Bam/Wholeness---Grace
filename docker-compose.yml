@@ -1,9 +1,5 @@
 # ─── Docker Compose for Wholeness and Grace ────────────────────
-# Spins up PostgreSQL and the API server so the frontend team
-# can run the full backend locally.
-
 version: "3.9"
-
 services:
   # ─── PostgreSQL Database ──────────────────────────────────
   db:
@@ -24,7 +20,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
   # ─── API Server ──────────────────────────────────────────
   api:
     build:
@@ -36,7 +31,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3001
       DATABASE_URL: postgresql://postgres:postgres@db:5432/wholeness_grace
       JWT_ACCESS_SECRET: dev-access-secret-wholeness-grace-2024
@@ -47,10 +42,19 @@ services:
       RATE_LIMIT_MAX: "1000"
     ports:
       - "3001:3001"
-    volumes:
-      # Mount package.json for potential hot-reload in dev (optional)
-      - ./dist:/app/dist:ro
-
+  # ─── Frontend ────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: wng-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    ports:
+      - "3000:3000"
 volumes:
   pgdata:
     driver: local
