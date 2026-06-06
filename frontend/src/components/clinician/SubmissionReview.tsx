@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Submission, Assignment } from "@/types";
 import { MessageSquare, CheckCircle, ChevronLeft, Calendar, User } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { api } from "@/lib/api-client";
 
 interface SubmissionReviewProps {
   submission: Submission;
@@ -26,10 +27,16 @@ export default function SubmissionReview({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    onReviewSubmit(review);
-    setIsSubmitting(false);
+    try {
+      await api.post(`/submissions/${submission.id}/review`, {
+        feedback: review,
+      });
+      onReviewSubmit(review);
+    } catch (error) {
+      console.error("Failed to submit review:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
