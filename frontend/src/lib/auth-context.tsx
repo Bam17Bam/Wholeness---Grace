@@ -39,8 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const data = await api.post("/auth/login", { email, password });
       
-      if (data.token) {
-        api.setToken(data.token);
+      if (data.accessToken) {
+        api.setToken(data.accessToken);
         // We'll also store the token in a cookie or memory
         // For this demo, let's just use the API client memory
       }

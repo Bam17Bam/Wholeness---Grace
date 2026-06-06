@@ -44,11 +44,11 @@ export default function ClinicianDashboard() {
     setIsDataLoading(true);
     try {
       if (activeTab === 'clients') {
-        const data = await api.get("/clients");
-        setClients(data);
+        const response = await api.get("/clients");
+        setClients(response.data);
       } else if (activeTab === 'audit') {
-        const data = await api.get("/audit-logs");
-        setAuditLogs(data);
+        const response = await api.get("/audit-logs");
+        setAuditLogs(response.data);
       }
     } catch (error) {
       console.error("Failed to fetch clinician data:", error);

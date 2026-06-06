@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Send, AlertCircle } from "lucide-react";
+import { api } from "@/lib/api-client";
 
 interface AssignmentFormProps {
   clientId: string;
@@ -19,12 +20,25 @@ export default function AssignmentForm({ clientId, clientName, onSuccess, onCanc
     setIsSubmitting(true);
     setError(null);
 
-    // Simulate API call
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const promptText = formData.get("prompt") as string;
+    const dueDate = formData.get("dueDate") as string;
+    const promptType = formData.get("category") as any;
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.post("/assignments", {
+        clientId,
+        title,
+        clinicianNote: description,
+        promptText,
+        promptType,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+      });
       onSuccess();
-    } catch (err) {
-      setError("Failed to create assignment. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Failed to create assignment. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -45,6 +59,7 @@ export default function AssignmentForm({ clientId, clientName, onSuccess, onCanc
           <input
             type="text"
             id="title"
+            name="title"
             required
             placeholder="e.g., Morning Reflection"
             className="w-full px-4 py-2 rounded-xl border border-wg-charcoal/10 focus:outline-none focus:ring-2 focus:ring-wg-primary/50"
@@ -57,6 +72,7 @@ export default function AssignmentForm({ clientId, clientName, onSuccess, onCanc
           </label>
           <textarea
             id="description"
+            name="description"
             required
             rows={2}
             placeholder="What should the client do?"
@@ -70,6 +86,7 @@ export default function AssignmentForm({ clientId, clientName, onSuccess, onCanc
           </label>
           <textarea
             id="prompt"
+            name="prompt"
             required
             rows={3}
             placeholder="What question should they answer?"
@@ -85,6 +102,7 @@ export default function AssignmentForm({ clientId, clientName, onSuccess, onCanc
             <input
               type="date"
               id="dueDate"
+              name="dueDate"
               required
               className="w-full px-4 py-2 rounded-xl border border-wg-charcoal/10 focus:outline-none focus:ring-2 focus:ring-wg-primary/50"
             />
@@ -95,12 +113,13 @@ export default function AssignmentForm({ clientId, clientName, onSuccess, onCanc
             </label>
             <select
               id="category"
+              name="category"
               className="w-full px-4 py-2 rounded-xl border border-wg-charcoal/10 focus:outline-none focus:ring-2 focus:ring-wg-primary/50"
             >
               <option value="reflection">Reflection</option>
-              <option value="exercise">Exercise</option>
-              <option value="reading">Reading</option>
-              <option value="faith">Faith-based</option>
+              <option value="journal">Journal</option>
+              <option value="checklist">Checklist</option>
+              <option value="scale">Scale</option>
             </select>
           </div>
         </div>

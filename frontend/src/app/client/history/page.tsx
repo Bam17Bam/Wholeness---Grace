@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronLeft, History as HistoryIcon, Search, Calendar, ChevronRight } from "lucide-react";
-import { MOCK_ASSIGNMENTS } from "@/lib/mock-data";
+import { api } from "@/lib/api-client";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Assignment } from "@/types";
 import { BottomNav } from "@/components/client/BottomNav";
@@ -15,6 +15,7 @@ export default function HistoryPage() {
   const router = useRouter();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -24,16 +25,32 @@ export default function HistoryPage() {
 
   useEffect(() => {
     if (user) {
-      setAssignments(MOCK_ASSIGNMENTS.filter(a => a.status === 'submitted' || a.status === 'reviewed'));
+      fetchHistory();
     }
   }, [user]);
 
+  const fetchHistory = async () => {
+    setIsDataLoading(true);
+    try {
+      // Fetch both submitted and reviewed assignments
+      const [submitted, reviewed] = await Promise.all([
+        api.get("/assignments?status=submitted"),
+        api.get("/assignments?status=reviewed")
+      ]);
+      setAssignments([...submitted.data, ...reviewed.data]);
+    } catch (error) {
+      console.error("Failed to fetch history:", error);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
   const filtered = assignments.filter(a => 
     a.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    a.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (a.description && a.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  if (isLoading || !user) {
+  if (isLoading || !user || isDataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-wg-background">
         <div className="animate-pulse text-wg-primary font-serif italic">Loading...</div>
