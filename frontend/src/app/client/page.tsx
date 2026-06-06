@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut, Layout, Clock, CheckCircle, Quote } from "lucide-react";
-import { MOCK_ASSIGNMENTS } from "@/lib/mock-data";
+import { api } from "@/lib/api-client";
 import { AssignmentCard } from "@/components/client/AssignmentCard";
 import { Assignment } from "@/types";
 import { BottomNav } from "@/components/client/BottomNav";
@@ -13,6 +13,7 @@ export default function ClientDashboard() {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [isDataLoading, setIsDataLoading] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -22,11 +23,23 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     if (user) {
-      setAssignments(MOCK_ASSIGNMENTS);
+      fetchAssignments();
     }
   }, [user]);
 
-  if (isLoading || !user) {
+  const fetchAssignments = async () => {
+    setIsDataLoading(true);
+    try {
+      const response = await api.get("/assignments");
+      setAssignments(response.data);
+    } catch (error) {
+      console.error("Failed to fetch assignments:", error);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
+  if (isLoading || !user || isDataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-wg-background">
         <div className="animate-pulse text-wg-primary font-serif italic">Loading...</div>
@@ -35,7 +48,7 @@ export default function ClientDashboard() {
   }
 
   const pendingCount = assignments.filter(a => a.status === 'pending').length;
-  const completedCount = assignments.filter(a => a.status === 'completed').length;
+  const completedCount = assignments.filter(a => a.status === 'submitted' || a.status === 'reviewed').length;
   const totalCount = assignments.length;
 
   return (
@@ -94,10 +107,10 @@ export default function ClientDashboard() {
         <section className="space-y-6">
           <h2 className="text-sm font-bold uppercase tracking-wider text-wg-charcoal/40">Active Homework</h2>
           
-          {assignments.filter(a => a.status !== 'completed').length > 0 ? (
+          {assignments.filter(a => a.status === 'pending' || a.status === 'overdue').length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {assignments
-                .filter(a => a.status !== 'completed')
+                .filter(a => a.status === 'pending' || a.status === 'overdue')
                 .map(assignment => (
                   <AssignmentCard key={assignment.id} assignment={assignment} />
                 ))

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api-client";
 
 export type Role = "clinician" | "client";
 
@@ -36,18 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string, role: Role) => {
     setIsLoading(true);
     try {
-      // This will be replaced with real API call to /api/auth/login
-      // Simulated success for scaffolding
-      const mockUser: User = {
-        id: "mock-id-" + Math.random().toString(36).substr(2, 9),
-        email,
-        name: email.split('@')[0],
-        role,
-      };
+      const data = await api.post("/auth/login", { email, password });
       
-      setUser(mockUser);
+      if (data.accessToken) {
+        api.setToken(data.accessToken);
+        // We'll also store the token in a cookie or memory
+        // For this demo, let's just use the API client memory
+      }
       
-      if (role === "clinician") {
+      setUser(data.user);
+      
+      if (data.user.role === "clinician") {
         router.push("/clinician");
       } else {
         router.push("/client");
@@ -62,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null);
+    api.setToken(null);
     router.push("/login");
   };
 
